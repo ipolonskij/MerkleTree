@@ -1,4 +1,4 @@
-package com.merkletree.entity;
+package com.merkletree.simple;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -15,7 +15,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Setter
-public class SimpleMerkleTreeLeafDbo
+public class LeafDbo
 {
     @Id
     @GeneratedValue(generator = "uuid4", strategy = GenerationType.AUTO)

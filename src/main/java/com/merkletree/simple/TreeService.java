@@ -1,8 +1,6 @@
-package com.merkletree.service;
+package com.merkletree.simple;
 
-import com.merkletree.entity.SimpleMerkleTreeLeafDbo;
 import com.merkletree.hash.HashService;
-import com.merkletree.respository.LeafRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -11,7 +9,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-public class SimpleMerkleTreeService
+public class TreeService
 {
     private final LeafRepository leafRepository;
 
@@ -32,7 +30,7 @@ public class SimpleMerkleTreeService
 
         for (Map.Entry<Integer, String> entry : merkleTree.entrySet())
         {
-            var leaf = new SimpleMerkleTreeLeafDbo();
+            var leaf = new LeafDbo();
 
             leaf.setKey(entry.getKey());
             leaf.setValue(entry.getValue());
