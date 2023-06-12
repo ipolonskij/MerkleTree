@@ -8,7 +8,5 @@ import java.util.UUID;
 @Repository
 public interface LeafRepository extends JpaRepository<LeafDbo, UUID>
 {
-
     LeafDbo findLeafsDboByKey(Integer key);
-
 }

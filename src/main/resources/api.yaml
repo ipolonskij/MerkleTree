@@ -1,0 +1,146 @@
+openapi: 3.0.3
+info:
+  title: Merkle Tree API
+  description: Merkle Tree API
+  version: 1.0.0
+servers:
+  - url: /
+paths:
+  /merkle-tree:
+    post:
+      operationId: createMerkleTree
+      tags:
+        - merkle-tree
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+                $ref: '#/components/schemas/LeafNodes'
+      responses:
+        201:
+          description: CREATED
+
+    get:
+      operationId: getMerkleTree
+      tags:
+        - merkle-tree
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Nodes'
+
+    put:
+      operationId: updateLeaf
+      tags:
+        - merkle-tree
+      parameters:
+        - in: query
+          name: leafIndex
+          schema:
+            type: integer
+          required: true
+          description: The index of the leaf value
+        - in: query
+          name: leafValue
+          schema:
+            type: string
+          required: true
+          description: The value of the leaf
+      responses:
+        200:
+          description: OK
+
+  /merkle-tree/proof:
+    get:
+      operationId: getMerkleProof
+      tags:
+        - merkle-tree
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
+
+  /merkle-tree/membership:
+    get:
+      operationId: getProofOfMembership
+      tags:
+        - merkle-tree
+      parameters:
+        - in: query
+          name: leafIndex
+          schema:
+            type: integer
+          required: true
+          description: The index of the leaf value
+        - in: query
+          name: leafValue
+          schema:
+            type: string
+          required: true
+          description: The value of the leaf
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /sparse-merkle-tree:
+    post:
+      operationId: createSparseMerkleTree
+      tags:
+        - sparse-merkle-tree
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeafNodes'
+      responses:
+        201:
+          description: CREATED
+
+components:
+  parameters:
+    merkle-tree-size:
+      in: query
+      name: merkle-tree-size
+      required: true
+      schema:
+        type: string
+
+  schemas:
+    LeafNodes:
+      type: object
+      properties:
+        size:
+          type: integer
+          description: The number of leafs the merkle tree is supposed to have
+        dataPoints:
+          type: object
+          description: "The data points with their indexes and values"
+          $ref: '#/components/schemas/DataPoints'
+
+    DataPoints:
+      type: object
+      description: The index of the leaf in the merkle tree
+      additionalProperties:
+        type: string
+        description: The value of the leaf node
+
+    Nodes:
+      type: object
+      description: The list of nodes that are part of the merkle tree
+      additionalProperties:
+        type: string
+        description: The hash value of the node
