@@ -25,10 +25,10 @@ public class MerkleTree
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "merkleTree", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "merkleTree", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<LeafNode> leafNodes = new ArrayList<>();
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "merkleTree", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "merkleTree", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Node> nodes = new ArrayList<>();
 
     public int getNumberOfNodes()

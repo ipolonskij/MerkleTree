@@ -72,7 +72,9 @@ dependencies {
     testImplementation 'org.instancio:instancio-junit:2.16.0'
 }
 
-
+compileJava {
+    dependsOn clean
+}
 
 tasks.named('test') {
     useJUnitPlatform()

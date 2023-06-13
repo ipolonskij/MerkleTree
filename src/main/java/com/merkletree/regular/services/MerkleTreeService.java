@@ -26,14 +26,14 @@ public class MerkleTreeService
 
     private final HashService hashService;
 
-    public void createMerkleTree(LeafNodesDto leafNodesDto)
+    public UUID createMerkleTree(LeafNodesDto leafNodesDto)
     {
         var leafNodes = createLeafNodes(leafNodesDto);
 
-        createMerkleTree(leafNodes);
+        return createMerkleTree(leafNodes, null);
     }
 
-    private void createMerkleTree(List<LeafNode> leafNodes)
+    private UUID createMerkleTree(List<LeafNode> leafNodes, UUID merkleTreeId)
     {
         var parentNodes = getNodes(leafNodes);
 
@@ -46,23 +46,44 @@ public class MerkleTreeService
             completeNodeList.addAll(parentNodes);
         }
 
-        var merkleTree = MerkleTree.builder()
-                .leafNodes(leafNodes)
-                .nodes(completeNodeList)
-                .build();
+        MerkleTree merkleTree;
 
-        leafNodes.forEach(leafNode -> leafNode.setMerkleTree(merkleTree));
+        if (merkleTreeId == null)
+        {
+            merkleTree = MerkleTree.builder()
+                    .leafNodes(leafNodes)
+                    .nodes(completeNodeList)
+                    .build();
 
-        completeNodeList.forEach(node -> node.setMerkleTree(merkleTree));
+            leafNodes.forEach(leafNode -> leafNode.setMerkleTree(merkleTree));
 
-        merkleTreeRepository.save(merkleTree);
+            completeNodeList.forEach(node -> node.setMerkleTree(merkleTree));
+        } else
+        {
+            merkleTree = merkleTreeRepository.findById(merkleTreeId).orElseThrow();
+
+            completeNodeList.forEach(node -> node.setMerkleTree(merkleTree));
+
+            merkleTree.getLeafNodes().addAll(leafNodes);
+
+            merkleTree.getNodes().forEach(node ->
+                    completeNodeList.stream()
+                            .filter(completeNode -> completeNode.getIndex() == node.getIndex())
+                            .findFirst()
+                            .ifPresent(completeNode -> node.setHashValue(completeNode.getHashValue())));
+        }
+
+        var savedMerkleTree = merkleTreeRepository.save(merkleTree);
+
+        return savedMerkleTree.getId();
+
     }
 
-    public Map<Integer, String> getMerkleTree()
+    public Map<Integer, String> getMerkleTree(UUID merkleTreeId)
     {
-        var leafNodes = leafNodeService.getLeafNodes();
+        var leafNodes = leafNodeService.getLeafNodes(merkleTreeId);
 
-        var nodes = nodesService.getNodes();
+        var nodes = nodesService.getNodes(merkleTreeId);
 
         var merkleTreeNodes = new HashMap<Integer, String>();
 
@@ -75,13 +96,16 @@ public class MerkleTreeService
         return merkleTreeNodes;
     }
 
-    public void updateLeaf(Integer leafIndex, String leafValue)
+    public UUID updateLeaf(UUID merkleTreeId, LeafNodesDto leafNodesDto)
     {
-        leafNodeService.updateLeafValue(leafIndex, leafValue);
+        leafNodesDto.getDataPoints().forEach((index, leafValue) ->
+        {
+            leafNodeService.updateLeafValue(merkleTreeId, Integer.parseInt(index), leafValue);
+        });
 
-        var leafNodes = leafNodeService.getLeafNodes();
+        var leafNodes = leafNodeService.getLeafNodes(merkleTreeId);
 
-        createMerkleTree(leafNodes);
+        return createMerkleTree(leafNodes, merkleTreeId);
     }
 
     public String getMerkleProof()
@@ -91,11 +115,11 @@ public class MerkleTreeService
         return node.getHashValue();
     }
 
-    public List<String> getProofOfMembership(Integer proofLeafIndex, String proofLeafValue)
+    public List<String> getProofOfMembership(UUID merkleTreeId, Integer proofLeafIndex, String proofLeafValue)
     {
-        var leafNodes = leafNodeService.getLeafNodes();
+        var leafNodes = leafNodeService.getLeafNodes(merkleTreeId);
 
-        var containsLeafNode =  leafNodes.stream().anyMatch(
+        var containsLeafNode = leafNodes.stream().anyMatch(
                 leafNode -> leafNode.getIndex() == proofLeafIndex && leafNode.getLeafValue().equals(proofLeafValue));
 
         if (!containsLeafNode)
@@ -103,16 +127,16 @@ public class MerkleTreeService
             throw new IllegalArgumentException("No leaf with provided index or leaf value present");
         }
 
-        var merkleTree = getMerkleTree();
+        var merkleTree = getMerkleTree(merkleTreeId);
 
         var proofOfMembership = new ArrayList<String>();
 
         int levelOffset = 0;
         int leafIndex = proofLeafIndex;
 
-        for (int levelSize = leafNodes.size(); levelSize > 1; levelSize = (levelSize+1)/2)
+        for (int levelSize = leafNodes.size(); levelSize > 1; levelSize = (levelSize + 1) / 2)
         {
-            int sibilingNodeIndex  = (leafIndex % 2 == 0) ? leafIndex + 1 : leafIndex -1;
+            int sibilingNodeIndex = (leafIndex % 2 == 0) ? leafIndex + 1 : leafIndex - 1;
 
             if (sibilingNodeIndex < levelSize)
             {
@@ -120,7 +144,7 @@ public class MerkleTreeService
                 proofOfMembership.add(merkleTree.get(nodeIndex));
             }
 
-            leafIndex /=2;
+            leafIndex /= 2;
 
             levelOffset += levelSize;
         }
@@ -130,16 +154,7 @@ public class MerkleTreeService
 
     private List<LeafNode> createLeafNodes(LeafNodesDto leafNodesDto)
     {
-        var numberOfLeafNodes = leafNodesDto.getDataPoints().size();
-
-        var primeFactorsOfLeafNodes = getPrimeFactors(numberOfLeafNodes);
-
-        var containsValueNotTwo = primeFactorsOfLeafNodes.stream().anyMatch(number -> number != 2);
-
-        if (containsValueNotTwo)
-        {
-            throw new IllegalArgumentException("Number of leaf nodes is not binary");
-        }
+        verifyMerkleTreeRequest(leafNodesDto);
 
         var leafNodesDbo = new ArrayList<LeafNode>();
 
@@ -151,6 +166,20 @@ public class MerkleTreeService
                                 .hashValue(hashService.hashData(value))
                                 .build()));
         return leafNodesDbo;
+    }
+
+    private void verifyMerkleTreeRequest(LeafNodesDto leafNodesDto)
+    {
+        var numberOfLeafNodes = leafNodesDto.getDataPoints().size();
+
+        var primeFactorsOfLeafNodes = getPrimeFactors(numberOfLeafNodes);
+
+        var containsValueNotTwo = primeFactorsOfLeafNodes.stream().anyMatch(number -> number != 2);
+
+        if (containsValueNotTwo)
+        {
+            throw new IllegalArgumentException("Number of leaf nodes is not binary");
+        }
     }
 
     private static List<Integer> getPrimeFactors(int number)

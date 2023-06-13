@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -16,14 +18,14 @@ public class LeafNodeService
 
     private final HashService hashService;
 
-    public List<LeafNode> getLeafNodes()
+    public List<LeafNode> getLeafNodes(UUID merkleTreeId)
     {
-        return leafNodesRepository.findAll();
+        return leafNodesRepository.findAllByMerkleTree_Id(merkleTreeId);
     }
 
-    public void updateLeafValue(Integer leafIndex, String leafValue)
+    public void updateLeafValue(UUID merkleTreeId,Integer leafIndex, String leafValue)
     {
-        var leafNode = leafNodesRepository.findLeafNodeByIndex(leafIndex);
+        var leafNode = leafNodesRepository.findLeafNodeByIndexAndMerkleTree_Id(leafIndex, merkleTreeId);
 
         leafNode.setLeafValue(leafValue);
 
@@ -31,5 +33,4 @@ public class LeafNodeService
 
         leafNodesRepository.save(leafNode);
     }
-
 }

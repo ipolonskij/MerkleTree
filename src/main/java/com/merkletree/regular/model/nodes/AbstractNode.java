@@ -30,7 +30,7 @@ public abstract class AbstractNode
     @Column(name ="node_hash_value")
     private String hashValue;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "merkle_tree_id")
     private MerkleTree merkleTree;
 

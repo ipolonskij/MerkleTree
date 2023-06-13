@@ -16,15 +16,23 @@ paths:
         content:
           application/json:
             schema:
-                $ref: '#/components/schemas/LeafNodes'
+              $ref: '#/components/schemas/LeafNodes'
       responses:
         201:
           description: CREATED
+          content:
+            application/json:
+              schema:
+                type: string
+                format: UUID
 
+  /merkle-tree/{merkleTreeId}:
     get:
       operationId: getMerkleTree
       tags:
         - merkle-tree
+      parameters:
+        - $ref: '#/components/parameters/merkleTreeId'
       responses:
         200:
           description: OK
@@ -38,41 +46,25 @@ paths:
       tags:
         - merkle-tree
       parameters:
-        - in: query
-          name: leafIndex
-          schema:
-            type: integer
-          required: true
-          description: The index of the leaf value
-        - in: query
-          name: leafValue
-          schema:
-            type: string
-          required: true
-          description: The value of the leaf
+        - $ref: '#/components/parameters/merkleTreeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeafNodes'
       responses:
         200:
           description: OK
 
-  /merkle-tree/proof:
-    get:
-      operationId: getMerkleProof
-      tags:
-        - merkle-tree
-      responses:
-        200:
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: string
 
-  /merkle-tree/membership:
+  /merkle-tree/{merkleTreeId}/membership:
     get:
       operationId: getProofOfMembership
       tags:
         - merkle-tree
       parameters:
+        - $ref: '#/components/parameters/merkleTreeId'
         - in: query
           name: leafIndex
           schema:
@@ -94,6 +86,23 @@ paths:
                 type: array
                 items:
                   type: string
+
+  /merkle-tree/{merkleTreeId}/proof:
+    get:
+      operationId: getMerkleProof
+      tags:
+        - merkle-tree
+      parameters:
+        - $ref: '#/components/parameters/merkleTreeId'
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
+
+
 
   /sparse-merkle-tree:
     post:
@@ -118,6 +127,15 @@ components:
       required: true
       schema:
         type: string
+
+    merkleTreeId:
+      in: path
+      name: merkleTreeId
+      description: The merkle tree id
+      required: true
+      schema:
+        type: string
+        format: uuid
 
   schemas:
     LeafNodes:
