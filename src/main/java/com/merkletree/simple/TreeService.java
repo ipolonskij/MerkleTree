@@ -19,9 +19,9 @@ public class TreeService
     {
         var merkleTree = new HashMap<Integer, String>();
 
-        merkleTree.put(0,"zero");
+        merkleTree.put(0, "zero");
         merkleTree.put(1, "one");
-        merkleTree.put(2,"two");
+        merkleTree.put(2, "two");
         merkleTree.put(3, "three");
         merkleTree.put(4, "four");
         merkleTree.put(5, "five");

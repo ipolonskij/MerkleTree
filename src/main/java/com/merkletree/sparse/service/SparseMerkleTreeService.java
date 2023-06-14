@@ -28,6 +28,17 @@ public class SparseMerkleTreeService extends AbstractMerkleTreeService
     }
 
 
+    @Override
+    public void verifyProofOfMembershipLeaf(List<LeafNode> leafNodes, Integer proofLeafIndex, String proofLeafValue)
+    {
+        var containsLeafNode = leafNodes.stream().anyMatch(
+                leafNode -> leafNode.getIndex() == proofLeafIndex && leafNode.getLeafValue().equals(proofLeafValue) && !leafNode.getLeafValue().equals("DUMMY"));
+
+        if (!containsLeafNode)
+        {
+            throw new IllegalArgumentException("No leaf with provided index or leaf value present");
+        }
+    }
 
     @Override
     public List<LeafNode> createLeafNodes(LeafNodesDto leafNodesDto)

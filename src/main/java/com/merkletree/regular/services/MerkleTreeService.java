@@ -22,6 +22,18 @@ public class MerkleTreeService extends AbstractMerkleTreeService
     }
 
     @Override
+    public void verifyProofOfMembershipLeaf(List<LeafNode> leafNodes, Integer proofLeafIndex, String proofLeafValue)
+    {
+        var containsLeafNode = leafNodes.stream().anyMatch(
+                leafNode -> leafNode.getIndex() == proofLeafIndex && leafNode.getLeafValue().equals(proofLeafValue));
+
+        if (!containsLeafNode)
+        {
+            throw new IllegalArgumentException("No leaf with provided index or leaf value present");
+        }
+    }
+
+    @Override
     public List<LeafNode> createLeafNodes(com.merkletree.model.LeafNodesDto leafNodesDto)
     {
         verifyMerkleTreeRequest(leafNodesDto);

@@ -1,5 +1,6 @@
 package com.merkletree.common;
 
+import com.merkletree.model.LeafNodesDto;
 import com.merkletree.hash.HashService;
 import com.merkletree.regular.model.MerkleTree;
 import com.merkletree.regular.model.nodes.AbstractNode;
@@ -27,7 +28,7 @@ public abstract class AbstractMerkleTreeService
 
     protected final HashService hashService;
 
-    public void verifyMerkleTreeRequest(com.merkletree.model.LeafNodesDto leafNodesDto)
+    public void verifyMerkleTreeRequest(LeafNodesDto leafNodesDto)
     {
         var numberOfLeafNodes = leafNodesDto.getDataPoints().size();
 
@@ -139,13 +140,7 @@ public abstract class AbstractMerkleTreeService
     {
         var leafNodes = leafNodeService.getLeafNodes(merkleTreeId);
 
-        var containsLeafNode = leafNodes.stream().anyMatch(
-                leafNode -> leafNode.getIndex() == proofLeafIndex && leafNode.getLeafValue().equals(proofLeafValue));
-
-        if (!containsLeafNode)
-        {
-            throw new IllegalArgumentException("No leaf with provided index or leaf value present");
-        }
+        verifyProofOfMembershipLeaf(leafNodes, proofLeafIndex, proofLeafValue);
 
         var merkleTree = getMerkleTree(merkleTreeId);
 
@@ -172,6 +167,7 @@ public abstract class AbstractMerkleTreeService
         return proofOfMembership;
     }
 
+    public abstract void verifyProofOfMembershipLeaf(List<LeafNode> leafNodes, Integer proofLeafIndex, String proofLeafValue);
 
     public UUID createMerkleTree(List<LeafNode> leafNodes, UUID merkleTreeId)
     {
