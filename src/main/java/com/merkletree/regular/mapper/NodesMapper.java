@@ -1,7 +1,6 @@
 package com.merkletree.regular.mapper;
 
 import org.mapstruct.Mapper;
-
 import java.util.Map;
 
 @Mapper(componentModel = "spring")
